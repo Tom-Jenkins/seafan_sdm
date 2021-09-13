@@ -1,2 +1,3 @@
-# seafan_sdm
-Data and code from Jenkins et al. 2021
+# Seafan Species Distribution Modelling
+
+Data and code from Jenkins and Stevens 2021 (in review)
