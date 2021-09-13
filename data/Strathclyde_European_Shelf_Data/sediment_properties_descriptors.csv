@@ -1,0 +1,19 @@
+Variable,Description,Unit
+MudPercent,Mud percentage,%
+SandPercent,Sand percentage,%
+GravelPercent,Gravel percentage,%
+TotalD50,Median grain size of the whole sediment,mm
+SandD50,Median grain size of the sand fraction,mm
+GravelD50,Median grain size of the gravel fraction,mm
+Rock10cm,Fraction of area with rock in the top 10 cm of sediment,Fraction
+Rock50cm,Fraction of area with rock in the top 50 cm of sediment,Fraction
+Porosity,Porosity of the sediment,unitless
+Permeability,Permeability of the sediment,m^2
+POC,Particulate organic carbon content of sediments,%
+TN,Nitrogen content of sediments,%
+SurfaceCarbon,Carbon stored in surface sediments,kg C m^-2
+SurfaceNitrogen,Nitrogen stored in surface sediments,kg N m^-2
+OrbitalVelMean,Mean orbital velocity at the seabed,ms^-1
+OrbitalVelMax,Maximum Orbital velocity at the seabed,ms^-1
+TidalVelMean,Mean depth-average tidal velocity,ms^-1
+TidalVelMax,Maximum depth-average tidal velocity,ms^-1
