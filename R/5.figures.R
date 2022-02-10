@@ -178,70 +178,73 @@ ggsave("../figures/Figure3.jpeg", width = 7, height = 4.5, dpi = 1200)
 load("../data/pinkseafan_ras.RData")
 load("../data/deadmansfingers_ras.RData")
 
+# Bounding box
+bb = raster::extent(2577837, 4263921, 2500000, 4550179)
+bb_psf = raster::extent(2777837, 4263921, 2600000, 4050179)
+bb2 = raster::extent(2777837, 4263921, 3450179, 4550179)
+
+# Copied from below
+# figS3 = tm_shape(ras_figS3)+ tm_raster(title = "Habitat suitability", palette = "-RdYlBu")+
+#   tm_shape(uk, bbox = bb)+ tm_polygons(lwd = 0.2, border.col = "black")+
+#   tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.7)+
+#   tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5)+
+#   tm_layout(panel.labels = fig3_facet_lab, panel.label.size = 0.8,
+#             legend.outside = FALSE, legend.height = 0.15, legend.text.size = 0.7, legend.title.size = 1)
+# 
+# figS3
+
 # Plot heatmaps using tmap
-tm_shape(psf_raster)+
-  tm_raster(title = "", style = "cont", colorNA = "grey90")+
-  tm_facets(free.scales = FALSE)+
-  tm_layout(
-    # aes.palette = list(seq = "magma")
+plt_habsuit = function(ras, bbox = NULL){
+  if(is.null(bbox) == FALSE){
+    ras = crop(ras, bbox)
+  }
+  ras %>% 
+    tm_shape(.)+
+    tm_raster(palette = "YlOrRd")+
+    tm_layout(
+      legend.position = c("right","bottom")
     )
-
-
-
-
-# Create raster stack
-ras_fig3 = stack(ras_pred_filt(seafan_pred$seafan_ras_pred),
-                 ras_pred_filt(alcyon_pred$alcyon_ras_pred))
-
-# Facet labels
-fig3_facet_lab = c(expression(italic("Eunicella verrucosa")*":"~"present-day"), expression(italic("Alcyonium digitatum")*":"~"present-day"))
-
-# Figure 3
-tmap_mode("plot")
-fig3 = tm_shape(ras_fig3)+ tm_raster(title = "Habitat suitability", palette = "-RdYlBu")+
-  tm_shape(uk, bbox = bb)+ tm_polygons(lwd = 0.2, border.col = "black")+
-  tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.7)+
-  tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5)+
-  tm_layout(panel.labels = fig3_facet_lab, panel.label.size = 0.8,
-            legend.outside = FALSE, legend.height = 0.15, legend.text.size = 0.7, legend.title.size = 1)
-fig3
-tmap_save(tm = fig3, filename = "figures/Figure3.png", dpi = 600)
-tmap_save(tm = fig3, filename = "figures/Figure3.pdf")
+}
+hs1 = plt_habsuit(psf_raster$psf_pred, bbox = bb)
+hs2 = plt_habsuit(dmf_raster$dmf_pred, bbox = bb)
+hs = tmap_arrange(hs1, hs2)
+hs
+tmap_save(tm = hs, filename = "../figures/Figure4.png", width = 7, height = 4, dpi = 1200)
 
 
 #--------------#
 #
-# Figure 3: Interactive Version ####
+# Interactive Version ####
 #
 #--------------#
 
 # Convert rasters to polygons
-ras_fig3_seafan_poly = rasterToPolygons(ras_fig3$seafan_ras_pred)
-ras_fig3_alcyon_poly = rasterToPolygons(ras_fig3$alcyon_ras_pred)
+psf_poly1 = rasterToPolygons(psf_raster$psf_pred)
+dmf_poly1 = rasterToPolygons(dmf_raster$dmf_pred)
 
 # Round habitat suitability to 3 decimal places
 round_probs = function(x) { sprintf("%.3f", x) }
-ras_fig3_seafan_poly$seafan_ras_pred = round_probs(ras_fig3_seafan_poly$seafan_ras_pred)
-ras_fig3_alcyon_poly$alcyon_ras_pred = round_probs(ras_fig3_alcyon_poly$alcyon_ras_pred)
+psf_poly1[[1]] = round_probs(psf_poly1[[1]])
+dmf_poly1[[1]] = round_probs(dmf_poly1[[1]])
 
-# Convert GBIF presence points to sf object and set CRS
-gbif_seafan_filt_sf = st_as_sf(gbif_seafan_filt, coords = c("lon","lat"), crs = 4326)
-gbif_alcyon_filt_sf = st_as_sf(gbif_alcyon_filt, coords = c("lon","lat"), crs = 4326)
+# Import all presence points to sf object and set CRS
+psf_pres = read_csv("../data/pinkseafan_presence_pts.csv") %>% 
+  st_as_sf(., coords = c("lon","lat"), crs = 4326)
+dmf_pres = read_csv("../data/deadmansfingers_presence_pts.csv") %>% 
+  st_as_sf(., coords = c("lon","lat"), crs = 4326)
 
 # Colours for raster
-display.brewer.pal(n = 5, name = "RdYlBu")
-ras_cols = brewer.pal(5, "RdYlBu") %>% rev
+display.brewer.pal(n = 5, name = "YlOrRd")
+ras_cols = brewer.pal(5, "YlOrRd") %>% rev
 
 # Bins
-ras_bin = seq(0.5, 1.0, by = 0.10)
+ras_bin = seq(0, 1, by = 0.2)
 
 # Colour bin
 col_bin = colorBin(palette = ras_cols, bins = ras_bin, domain = ras_bin, na.color = "transparent")
   
 # Figure 3 interactive version
 l1 = leaflet() %>%
-  # Boundary
-  # fitBounds(lng1 = bb@xmin, lat1 = bb@ymin, lng2 = bb@xmax, lat2 = bb@ymax) %>%
   # Add mouse coordinates at top of map
   addMouseCoordinates() %>%
   # Add an inset minimap
@@ -271,33 +274,27 @@ l1 = leaflet() %>%
   # Add basemap
   addProviderTiles(providers$OpenStreetMap) %>%
   # Add seafan polygons
-  addPolygons(data = ras_fig3_seafan_poly, group = "Eunicella verrucosa",
-              fillColor = ~col_bin(ras_fig3_seafan_poly$seafan_ras_pred %>% as.numeric),
+  addPolygons(data = psf_poly1, group = "Eunicella verrucosa",
+              fillColor = ~col_bin(psf_poly1[[1]] %>% as.numeric),
               fillOpacity = 0.80,
               stroke = 1, weight = 0.2, color = "black",
-              popup = ~htmlEscape(ras_fig3_seafan_poly$seafan_ras_pred)) %>%
+              popup = ~htmlEscape(psf_poly1[[1]])) %>%
   # Add seafan presence points
-  addCircles(data = gbif_seafan_filt_sf, color = "black", weight = 1, radius = 300,
+  addCircles(data = psf_pres, color = "black", weight = 1, radius = 300,
              fillColor = "deeppink", fillOpacity = 0.8,
              group = "E. verrucosa presence points"
   ) %>% 
   # Add alcyon polygons
-  addPolygons(data = ras_fig3_alcyon_poly, group = "Alcyonium digitatum",
-              fillColor = ~col_bin(ras_fig3_alcyon_poly$alcyon_ras_pred %>% as.numeric),
+  addPolygons(data = dmf_poly1, group = "Alcyonium digitatum",
+              fillColor = ~col_bin(dmf_poly1[[1]] %>% as.numeric),
               fillOpacity = 0.80,
               stroke = 1, weight = 0.2, color = "black",
-              popup = ~htmlEscape(ras_fig3_alcyon_poly$alcyon_ras_pred)) %>%
+              popup = ~htmlEscape(dmf_poly1[[1]])) %>%
   # Add alcyon presence points
-  addCircles(data = gbif_alcyon_filt_sf, color = "black", weight = 1, radius = 300,
+  addCircles(data = dmf_pres, color = "black", weight = 1, radius = 300,
              fillColor = "royalblue", fillOpacity = 0.8,
              group = "A. digitatum presence points"
   ) %>% 
-  # Add seafan raster layer
-  # addRasterImage(ras_fig3$seafan_ras_pred, colors = col_bin, method = "ngb",
-  #                opacity = 0.80, group = "Eunicella verrucosa") %>% 
-  # Add alcyon raster layer
-  # addRasterImage(ras_fig3$alcyon_ras_pred, colors = col_bin, method = "ngb",
-  #                opacity = 0.80, group = "Alcyonium digitatum") %>% 
   # Add layers control
   addLayersControl(options = layersControlOptions(collapsed = FALSE),
                    baseGroups = c("Eunicella verrucosa","Alcyonium digitatum"),
@@ -307,220 +304,11 @@ l1 = leaflet() %>%
   # Add legend
   addLegend(title = "Habitat suitability", pal = col_bin, values = ras_bin, opacity = 0.80)
 l1
-saveWidget(l1, file = "figures/Figure3_interactive.html", selfcontained = TRUE)
-
-
-#--------------#
-#
-# Figure S3 ####
-#
-#--------------#
-
-# Plot all probabilities for habitat suitability
-ras_figS3 = stack(seafan_pred$seafan_ras_pred,
-                  alcyon_pred$alcyon_ras_pred)
-
-# Figure S3
-figS3 = tm_shape(ras_figS3)+ tm_raster(title = "Habitat suitability", palette = "-RdYlBu")+
-  tm_shape(uk, bbox = bb)+ tm_polygons(lwd = 0.2, border.col = "black")+
-  tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.7)+
-  tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5)+
-  tm_layout(panel.labels = fig3_facet_lab, panel.label.size = 0.8,
-            legend.outside = FALSE, legend.height = 0.15, legend.text.size = 0.7, legend.title.size = 1)
-
-figS3
-tmap_save(tm = figS3, filename = "figures/FigureS3.png", dpi = 600)
-tmap_save(tm = figS3, filename = "figures/FigureS3.pdf")
+saveWidget(l1, file = "../figures/Figure4_interactive.html", selfcontained = TRUE)
 
 
 
-#--------------#
-#
-# Figure 4 ####
-#
-#--------------#
 
-# Import raster predictions
-load("data/seafan_pred_ras.RData")
-seafan_pred
-load("data/alcyon_pred_ras.RData")
-alcyon_pred
-
-# Function that returns raster predictions showing only probabilities > 0.5
-ras_pred_filt = function(raster_file){
-  tmpfilter = raster_file < 0.5
-  return(mask(raster_file, tmpfilter, maskvalue = 1))
-}
-
-# Create raster stack
-ras_fig4 = stack(ras_pred_filt(seafan_pred$seafan_ras_pred),
-                 ras_pred_filt(seafan_pred$seafan_pred_2050_RCP45),
-                 ras_pred_filt(seafan_pred$seafan_pred_2100_RCP45)
-)
-
-# Facet labels
-fig4_facet_lab = c(expression(italic("Eunicella verrucosa")*":"~"present-day"),"2050 RCP 4.5","2100 RCP 4.5")
-
-# Figure 4 (RCP 4.5)
-fig4 = tm_shape(ras_fig4)+ tm_raster(title = "Habitat suitability", palette = "-RdYlBu")+ tm_facets(nrow = 1)+
-  tm_shape(uk, bbox = bb)+ tm_polygons(lwd = 0.2, border.col = "black")+
-  tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.7)+
-  tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5)+
-  tm_layout(panel.labels = fig4_facet_lab, panel.label.size = 0.8,
-            legend.outside = FALSE, legend.height = 0.15, legend.text.size = 0.7, legend.title.size = 1)
-fig4
-tmap_save(tm = fig4, filename = "figures/Figure4.png", dpi = 600)
-tmap_save(tm = fig4, filename = "figures/Figure4.pdf")
-
-# Find difference between predicted and present-day values and plot maps
-fig4_diff = stack(ras_fig4$seafan_pred_2050_RCP45 - ras_fig4$seafan_ras_pred,
-                  ras_fig4$seafan_pred_2100_RCP45 - ras_fig4$seafan_ras_pred)
-plot(fig4_diff)
-
-
-#--------------#
-#
-# Figure 4: Interactive Version ####
-#
-#--------------#
-
-# Function that returns raster predictions showing only probabilities > 0.5
-ras_pred_filt = function(raster_file){
-  tmpfilter = raster_file < 0.5
-  return(mask(raster_file, tmpfilter, maskvalue = 1))
-}
-
-# Create raster stack
-ras_fig4 = stack(ras_pred_filt(seafan_pred$seafan_ras_pred),
-                 ras_pred_filt(seafan_pred$seafan_pred_2050_RCP45),
-                 ras_pred_filt(seafan_pred$seafan_pred_2100_RCP45)
-                 )
-
-# Convert rasters to polygons
-ras_fig4_seafan_pres = rasterToPolygons(ras_fig4$seafan_ras_pred)
-ras_fig4_seafan_2050rcp45 = rasterToPolygons(ras_fig4$seafan_pred_2050_RCP45)
-ras_fig4_seafan_2100rcp45 = rasterToPolygons(ras_fig4$seafan_pred_2100_RCP45)
-
-# Round habitat suitability to 3 decimal places
-round_probs = function(x) { sprintf("%.3f", x) }
-ras_fig4_seafan_pres$seafan_ras_pred = round_probs(ras_fig4_seafan_pres$seafan_ras_pred)
-ras_fig4_seafan_2050rcp45$seafan_pred_2050_RCP45 = round_probs(ras_fig4_seafan_2050rcp45$seafan_pred_2050_RCP45)
-ras_fig4_seafan_2100rcp45$seafan_pred_2100_RCP45 = round_probs(ras_fig4_seafan_2100rcp45$seafan_pred_2100_RCP45)
-
-# Figure 3 interactive version
-l2 = leaflet() %>%
-  # Boundary
-  # fitBounds(lng1 = bb@xmin, lat1 = bb@ymin, lng2 = bb@xmax, lat2 = bb@ymax) %>%
-  # Add mouse coordinates at top of map
-  addMouseCoordinates() %>%
-  # Add an inset minimap
-  addMiniMap(
-    position = "topright",
-    tiles = providers$OpenStreetMap,
-    toggleDisplay = TRUE) %>%
-  # Add logo and link at the top of the map
-  leafem::addLogo(
-    img = "https://tomjenkins.netlify.app/project/pinkseafan/featured_hu6b938d805fc03dfee7e876a850589a8a_2399056_720x0_resize_q90_lanczos.JPG",
-    url = "https://tomjenkins.netlify.app/project/pinkseafan/",
-    src = "remote",
-    position = "topleft", width = 150, height = 105
-  ) %>% 
-  # Add a scalebar
-  addScaleBar(
-    position = "bottomright",
-    options = scaleBarOptions(imperial = FALSE)
-  ) %>%
-  # Reset map to default setting
-  addResetMapButton() %>% 
-  # Add measurement tool
-  addMeasure(position = "topleft",
-             primaryLengthUnit = "meters",
-             secondaryLengthUnit = "kilometers",
-             primaryAreaUnit = "sqmeters") %>% 
-  # Add basemap
-  addProviderTiles(providers$OpenStreetMap) %>%
-  # Add seafan polygons
-  addPolygons(data = ras_fig4_seafan_pres, group = "E. verrucosa present-day",
-              fillColor = ~col_bin(ras_fig4_seafan_pres$seafan_ras_pred %>% as.numeric),
-              fillOpacity = 0.80,
-              stroke = 1, weight = 0.2, color = "black",
-              popup = ~htmlEscape(ras_fig4_seafan_pres$seafan_ras_pred)) %>%
-  # Add seafan polygons 2050
-  addPolygons(data = ras_fig4_seafan_2050rcp45, group = "E. verrucosa 2050",
-              fillColor = ~col_bin(ras_fig4_seafan_2050rcp45$seafan_pred_2050_RCP45 %>% as.numeric),
-              fillOpacity = 0.80,
-              stroke = 1, weight = 0.2, color = "black",
-              popup = ~htmlEscape(ras_fig4_seafan_2050rcp45$seafan_pred_2050_RCP45)) %>%
-  # Add seafan polygons 2100
-  addPolygons(data = ras_fig4_seafan_2100rcp45, group = "E. verrucosa 2100",
-              fillColor = ~col_bin(ras_fig4_seafan_2100rcp45$seafan_pred_2100_RCP45 %>% as.numeric),
-              fillOpacity = 0.80,
-              stroke = 1, weight = 0.2, color = "black",
-              popup = ~htmlEscape(ras_fig4_seafan_2100rcp45$seafan_pred_2100_RCP45)) %>%
-  # Add seafan presence points
-  addCircles(data = gbif_seafan_filt_sf, color = "black", weight = 1, radius = 300,
-             fillColor = "deeppink", fillOpacity = 0.8,
-             group = "E. verrucosa presence points"
-  ) %>% 
-  # Add layers control
-  addLayersControl(options = layersControlOptions(collapsed = FALSE),
-                   baseGroups = c("E. verrucosa present-day",
-                                  "E. verrucosa 2050",
-                                  "E. verrucosa 2100"),
-                   overlayGroups = c("E. verrucosa presence points")
-  ) %>%   
-  hideGroup(c("E. verrucosa presence points", "E. verrucosa 2050", "E. verrucosa 2100")) %>%
-  # Add legend
-  addLegend(title = "Habitat suitability", pal = col_bin, values = ras_bin, opacity = 0.80)
-l2
-saveWidget(l2, file = "figures/Figure4_interactive.html", selfcontained = TRUE)
-
-
-
-#--------------#
-#
-# Figure S4 ####
-#
-#--------------#
-
-# Figure S4 (RCP 8.5)
-ras_figS4 = stack(ras_pred_filt(seafan_pred$seafan_ras_pred),
-                  ras_pred_filt(seafan_pred$seafan_pred_2050_RCP85),
-                  ras_pred_filt(seafan_pred$seafan_pred_2100_RCP85)
-)
-figS4_facet_lab = c(expression(italic("Eunicella verrucosa")*":"~"present-day"),"2050 RCP 8.5","2100 RCP 8.5")
-figS4 = tm_shape(ras_figS4)+ tm_raster(title = "Habitat suitability", palette = "-RdYlBu")+ tm_facets(nrow = 1)+
-  tm_shape(uk, bbox = bb)+ tm_polygons(lwd = 0.2, border.col = "black")+
-  tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.7)+
-  tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5)+
-  tm_layout(panel.labels = figS4_facet_lab, panel.label.size = 0.8,
-            legend.outside = FALSE, legend.height = 0.15, legend.text.size = 0.7, legend.title.size = 1)
-figS4
-tmap_save(tm = figS4, filename = "figures/FigureS4.png", dpi = 600)
-tmap_save(tm = figS4, filename = "figures/FigureS4.pdf")
-
-
-
-#--------------#
-#
-# Figure S1 ####
-#
-#--------------#
-
-# Raster predictors to plot
-ras_to_plot = c("BO21_tempmin_bdmean","MS_bathy_5m","MS_biogeo06_bathy_slope_5m","BO_calcite",
-                "BO_ph","Rock50cm","OrbitalVelMean","TidalVelMean")
-ras_predictors = raster::subset(rasters, ras_to_plot)
-
-# Plot raster predictor heatmaps
-figS1 = tm_shape(ras_predictors)+
-  tm_raster(title = "")+
-  tm_facets(free.scales = TRUE)+
-  tm_layout(legend.position = c("right","bottom"), legend.height = 0.3, legend.width = 0.3,
-            panel.label.size = 0.9)
-figS1
-tmap_save(tm = figS1, filename = "figures/FigureS1.png", width = 7, height = 4.5, dpi = 900)
-tmap_save(tm = figS1, filename = "figures/FigureS1.pdf", width = 7, height = 4.5)
 
 
 #--------------#
