@@ -6,6 +6,7 @@
 #
 # R script purpose:
 # 1. Pink sea fan: Maxent SDM
+# 2. Dead man's fingers: Maxent SDM
 #
 # Author: Tom Jenkins
 # Email: tom.l.jenkins@outlook.com
@@ -52,6 +53,9 @@ names(ras_predictors)
 
 # Re-check variance inflation factor for rasters
 vifcor(ras_predictors, maxobservations = ncell(ras_predictors), th = 0.70)
+
+# Export raster predictors as .RData object
+save(ras_predictors, file = "../data/ras_predictors.RData")
 
 
 # --------------- #
@@ -339,8 +343,8 @@ write_csv(dmf_var, file = "../data/deadseafan_varcontrib.csv")
 dmf_pred = eval.predictions(dmf_maxent)[[dmf_opt_score$tune.args]]
 
 # Plot predictions showing habitat suitability predictions
-tmS1 = tm_shape(dmf_pred)+ tm_raster()
-tmS1
+dmf_tm1 = tm_shape(dmf_pred)+ tm_raster()
+dmf_tm1
 
 # Execute Null model
 # Run null simulations with 100 iterations to get a reasonable null distribution 
@@ -388,10 +392,10 @@ dmf_pred_future = raster::predict(
 )
 
 # Future habitat suitability index
-tmS3 = tm_shape(dmf_pred_future)+ tm_raster()
+dmf_tm2 = tm_shape(dmf_pred_future)+ tm_raster()
 
 # Present versus future
-tmap_arrange(tmS1, tmS3)
+tmap_arrange(dmf_tm1, dmf_tm2)
 
 # Export raster predictions
 dmf_raster = raster::stack(dmf_pred, dmf_pred_future) %>% 
@@ -400,9 +404,34 @@ save(dmf_raster, file = "../data/deadmansfingers_ras.RData")
 
 
 
+# --------------- #
+#
+# Extract info for figures / supplementary ####
+#
+# --------------- #
 
-
-
+# Table of evaluation stats for all models
+library(gt)
+plot_gt = function(maxent_res_df, title = ""){
+  eval_stats = maxent_res_df %>%
+    dplyr::select(fc, rm, auc.val.avg, auc.val.sd, cbi.val.avg, cbi.val.sd, delta.AICc) %>% 
+    mutate(fc = factor(fc, levels = c("L","LQ","H"))) %>% 
+    arrange(fc, rm) %>% 
+    mutate_if(is.numeric, round, 2)
+  eval_stats %>%
+    gt() %>% 
+    tab_header(title = title) %>% 
+    tab_style(
+      style = list(cell_text(style = "italic")),
+      locations = cells_title(groups = "title")) %>% 
+    tab_style(
+      style = list(cell_text(weight = "bold")),
+      locations = cells_body(columns = everything(), rows = 11))
+}
+(psf_gt = plot_gt(psf_maxent@results, title = "Eunicella verrucosa"))
+(dmf_gt = plot_gt(dmf_maxent@results, title = "Alcyonium digitatum"))
+gtsave(psf_gt, filename = "../figures/gt_psf.png")
+gtsave(dmf_gt, filename = "../figures/gt_dmf.png")
 
 
 

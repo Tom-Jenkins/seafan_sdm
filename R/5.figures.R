@@ -9,7 +9,6 @@
 #
 # Author: Tom Jenkins
 # Email: tom.l.jenkins@outlook.com
-# Website: https://tomjenkins.netlify.app
 #
 # --------------------------- #
 
@@ -23,7 +22,6 @@ library(rgeos)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(rnaturalearthhires)
-library(ggpubr)
 library(ggspatial)
 library(jpeg)
 library(grid)
@@ -35,125 +33,90 @@ library(leafem)
 library(htmltools)
 library(htmlwidgets)
 library(RColorBrewer)
-
-# Import rasters
-load("data/raster_predictors.RData")
-names(rasters)
-
-# Bounding box of the study area
-bb = extent(rasters$Rock50cm)
+library(patchwork)
 
 # Import UK basemap from rnaturalworld package
-uk = ne_countries(continent = "Europe", scale = "large", returnclass = "sf") %>%
-  dplyr::select(name) %>% 
-  st_transform(crs = 4326)
-uk = crop_shape(uk, bb, polygon = TRUE)
-plot(uk)
+# uk = ne_countries(continent = "Europe", scale = "large", returnclass = "sf") %>%
+#   dplyr::select(name) %>% 
+#   st_transform(crs = 4326)
+# uk = crop_shape(uk, bb, polygon = TRUE)
+# plot(uk)
 
 
 # --------------- #
 #
-# Figure 1 ####
+# Visualise rasters ####
 #
 # --------------- #
 
-# Import datasets
-gbif_seafan_filt = read.csv(file = "data/gbif_seafan_filt.csv")
-gbif_alcyon_filt = read.csv(file = "data/gbif_alcyon_filt.csv")
+# Import rasters
+load("../data/ras_predictors.RData")
+names(ras_predictors)
 
-# Import images
-jpeg_psf = readJPEG("images/E_verrucosa_JRS.jfif") %>% 
-  rasterGrob(interpolate = TRUE)
-jpeg_psf = ggplot()+
-  annotation_custom(jpeg_psf, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
-  theme(
-    panel.background = element_blank(),
-    plot.background = element_blank(),
-    panel.border = element_blank()
-  )
-jpeg_dmf = readJPEG("images/A_digitatum_JRS.jfif") %>% 
-  rasterGrob(interpolate = TRUE)
-jpeg_dmf = ggplot()+
-  annotation_custom(jpeg_dmf, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
-  theme(
-    panel.background = element_blank(),
-    plot.background = element_blank(),
-    panel.border = element_blank()
-  )
+# Merge rasters
+ras_static = raster::stack(
+  raster::raster("../data/raster_predictors/bathymetry.tif"),
+  ras_predictors) %>% 
+  raster::subset(str_subset(names(.), "Temp|Oxy|Calc", negate = TRUE))
+names(rasters)
 
-# Plot presence records
-psf_range = ggplot()+
-  geom_sf(data = uk, colour = "black", fill = "grey", size = 0.2)+
-  geom_point(data = gbif_seafan_filt, aes(x = lon, y = lat),
-             shape = 21, fill = "deeppink", colour = "black", size = 1.2, stroke = 0.1)+
-  coord_sf(xlim = c(bb@xmin,bb@xmax), ylim = c(bb@ymin,bb@ymax), expand = FALSE)+
-  # https://stackoverflow.com/questions/61809382/how-can-i-put-a-scalebar-and-a-north-arrow-on-the-map-ggplot
-  annotation_north_arrow(data = uk, location = "bl", height = unit(0.4, "cm"), width = unit(0.4, "cm"),
-                         pad_y = unit(0.5, "cm"), style = north_arrow_orienteering(text_size = 4))+
-  annotation_scale(data = uk, location = "bl", bar_cols = c("black","white"),
-                   height = unit(0.15, "cm"), width_hint = 0.15, text_cex = 0.5)+
-  xlab("Longitude")+
-  ylab("Latitude")+
-  ggtitle(expression(italic("Eunicella verrucosa")*": present-day distribution"))
-# psf_range
-dmf_range = ggplot()+
-  geom_sf(data = uk, colour = "black", fill = "grey", size = 0.2)+
-  geom_point(data = gbif_alcyon_filt, aes(x = lon, y = lat),
-             shape = 21, fill = "royalblue", colour = "black", size = 1.2, stroke = 0.1)+
-  coord_sf(xlim = c(bb@xmin,bb@xmax), ylim = c(bb@ymin,bb@ymax), expand = FALSE)+
-  # https://stackoverflow.com/questions/61809382/how-can-i-put-a-scalebar-and-a-north-arrow-on-the-map-ggplot
-  annotation_north_arrow(data = uk, location = "bl", height = unit(0.4, "cm"), width = unit(0.4, "cm"),
-                         pad_y = unit(0.5, "cm"), style = north_arrow_orienteering(text_size = 4))+
-  annotation_scale(data = uk, location = "bl", bar_cols = c("black","white"),
-                   height = unit(0.15, "cm"), width_hint = 0.15, text_cex = 0.5)+
-  xlab("Longitude")+
-  ylab("")+
-  ggtitle(expression(italic("Alcyonium digitatum")*": present-day distribution"))
-# dmf_range
+# Import dynamic rasters
+ras_dynamic = raster::stack("../data/raster_predictors/env_rasters.tif") %>% 
+  raster::subset(str_subset(names(.), "Temp|Oxy|Calc|Arag"))
+names(ras_dynamic)
 
-# Custom ggplot theme
-fig1_theme = theme(
-  axis.text = element_text(colour = "black", size = 6),
-  axis.title = element_text(colour = "black", size = 7),
-  panel.grid = element_line(colour = "white", size = 0.3),
-  panel.background = element_rect(fill = "#deebf7"),
-  panel.border = element_rect(fill = NA, colour = "black", size = 0.3),
-  plot.title = element_text(size = 10, face = "bold")
-  # plot.title = element_blank()
-)
+# Plot static raster heatmaps
+plt_static = tm_shape(ras_static)+
+  tm_raster(title = "", style = "cont")+
+  tm_facets(free.scales = TRUE)+
+  tm_layout(
+    aes.palette = list(seq = "-viridis"),
+    legend.position = c("right","bottom"),
+    legend.height = 0.3, legend.width = 0.3,
+    panel.label.size = 0.9)
+plt_static
+tmap_save(tm = plt_static, filename = "../figures/FigureS1A.png", width = 5.5, height = 4.5, dpi = 1200)
 
-# Figure 1
-fig1 = ggarrange(psf_range + annotation_custom(grob = ggplotGrob(jpeg_psf),
-                                               xmin = -35,
-                                               xmax = Inf,
-                                               ymin = 60,
-                                               ymax = Inf)+
-                   fig1_theme,
-                 dmf_range + annotation_custom(grob = ggplotGrob(jpeg_dmf),
-                                               xmin = -35,
-                                               xmax = Inf,
-                                               ymin = 60,
-                                               ymax = Inf)+
-                   fig1_theme
-)
-fig1
-ggsave(plot = fig1, file = "figures/Figure1.png", width = 8, height = 5, dpi = 600)
-ggsave(plot = fig1, file = "figures/Figure1.pdf", width = 8, height = 5)
+# Plot static raster heatmaps
+plt_dynamic_ras = function(ras_stack){
+  tm_shape(ras_stack)+
+    tm_raster(title = "", style = "cont")+
+    tm_facets(free.scales = FALSE)+
+    tm_layout(
+      panel.label.size = 0.7,
+      legend.outside.size = 0.1)
+}
+dynamic_vars = c("Temp","Oxy","Arag","Calc")
+plt_dynamic_ls = lapply(dynamic_vars, function(x)
+  ras_dynamic %>%
+    raster::subset(str_subset(names(.), x)) %>% 
+    plt_dynamic_ras(.)
+    )
+plt_dynamic1 = tmap_arrange(
+  plt_dynamic_ls[[1]],
+  plt_dynamic_ls[[2]],
+  ncol = 1)
+tmap_save(tm = plt_dynamic1, filename = "../figures/FigureS1Bi.png", width = 7, height = 6, dpi = 1200)
+plt_dynamic2 = tmap_arrange(
+  plt_dynamic_ls[[3]],
+  plt_dynamic_ls[[4]],
+  ncol = 1)
+tmap_save(tm = plt_dynamic2, filename = "../figures/FigureS1Bii.png", width = 7, height = 6, dpi = 1200)
 
 
 # --------------- #
 #
-# Figure 2 ####
+# Visualise variable contribution ####
 #
 # --------------- #
 
-# Import datasets
-(seafan_var = read.csv("data/seafan_var.csv"))
-(alcyon_var = read.csv("data/alcyon_var.csv"))
+# Import data sets
+(psf_var = read.csv("../data/pinkseafan_varcontrib.csv"))
+(dmf_var = read.csv("../data/deadseafan_varcontrib.csv"))
 
 # Create data.frame of variable contribution
-var_contrib = rbind(cbind(seafan_var, data.frame(species = "Eunicella")),
-                    cbind(alcyon_var, data.frame(species = "Alcyonium")))
+var_contrib = rbind(cbind(psf_var, data.frame(species = "Eunicella")),
+                    cbind(dmf_var, data.frame(species = "Alcyonium")))
 var_contrib
 
 # Convert to log format
@@ -161,61 +124,70 @@ var_contrib_long = pivot_longer(var_contrib, cols = 2:3)
 var_contrib_long
 
 # Reorder variables
-var_order = c("MS_bathy_5m","MS_biogeo06_bathy_slope_5m","Rock50cm","BO21_tempmin_bdmean","OrbitalVelMean","TidalVelMean","BO_calcite","BO_ph")
-var_names = c("Bathymetry","Slope","Rock cover","Sea bottom temperature","Orbital velocity","Tidal velocity","Calcite","pH")
+var_order = c("slope","Rock50cm","OrbitalVelMean","TidalVelMean","Temp_FromKrige_3km_1951_2000","Oxy_FromKrige_3km_1951_2000","Calc_FromKrige_3km_1951_2000")
+var_names = c("Slope","Rock cover","Orbital velocity","Tidal velocity","Temperature","Oxygen concentration","Calcite saturation state")
 var_contrib_long$variable = factor(var_contrib_long$variable, levels = rev(var_order), labels = rev(var_names))
 
+# Plot variable contribution
+plt_varcontrib = function(df, Species = ""){
+  df %>% 
+    dplyr::filter(species == {Species}) %>% 
+    ggplot(data = .)+
+      # geom_bar(aes(x = variable, y = value, fill = name),
+      #          position = "dodge", stat = "identity",
+      #          width = 0.5)+
+      geom_col(aes(x = variable, y = value, fill = name),
+                position = "dodge", width = 0.7)+
+      coord_flip(expand = FALSE)+
+      scale_y_continuous(limits = c(0,50))+
+      scale_fill_manual(values = c("#d9d9d9","#525252"),
+                        labels = c("Percent contribution","Permutation importance"))+
+      ylab("(%)")+
+      theme_bw()+
+      theme(axis.title.y = element_blank(),
+            axis.title.x = element_text(size = 8),
+            axis.text.y = element_text(size = 9),
+            legend.title = element_blank(),
+            plot.title = element_text(size = 10))
+}
+
 # Eunicella variable contribution
-fig2a = ggplot(data = subset(var_contrib_long, species == "Eunicella"))+
-  geom_bar(aes(x = variable, y = value, fill = name), position = "dodge", stat = "identity")+
-  coord_flip(expand = FALSE)+
-  scale_y_continuous(limits = c(0,60))+
-  scale_fill_manual(values = c("#d9d9d9","#525252"),
-                    labels = c("Percent contribution","Permutation importance"))+
-  ylab("Variable contribution (%)")+
-  ggtitle(expression(italic("Eunicella verrucosa")))+
-  theme(axis.title.y = element_blank(),
-        legend.title = element_blank())
-fig2a
+plt_varA = plt_varcontrib(var_contrib_long, Species = "Eunicella")+
+  ggtitle(expression(italic("Eunicella verrucosa")))
 
 # Alcyonium variable contribution
-fig2b = ggplot(data = subset(var_contrib_long, species == "Alcyonium"))+
-  geom_bar(aes(x = variable, y = value, fill = name), position = "dodge", stat = "identity")+
-  coord_flip(expand = FALSE)+
-  scale_y_continuous(limits = c(0,70))+
-  scale_fill_manual(values = c("#d9d9d9","#525252"),
-                    labels = c("Percent contribution","Permutation importance"))+
-  ylab("Variable contribution (%)")+
-  ggtitle(expression(italic("Alcyonium digitatum")))+
-  theme(axis.title.y = element_blank(),
-        # axis.ticks.y = element_blank(),
-        legend.title = element_blank())
-fig2b
+plt_varB = plt_varcontrib(var_contrib_long, Species = "Alcyonium")+
+  ggtitle(expression(italic("Alcyonium digitatum")))
 
-# Figure 2
-fig2 = ggarrange(fig2a, fig2b, common.legend = TRUE)
-fig2
-ggsave("figures/Figure2.png", plot = fig2, width = 10, height = 5, dpi = 600)
-ggsave("figures/Figure2.pdf", plot = fig2, width = 10, height = 5)
+# Patchwork
+plt_varA +
+  plt_varB + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+ggsave("../figures/Figure3.jpeg", width = 7, height = 4.5, dpi = 1200)
+
 
 
 #--------------#
 #
-# Figure 3 ####
+# Visualise present-day habitat suitability ####
 #
 #--------------#
 
 # Import raster predictions
-load("data/seafan_pred_ras.RData")
-seafan_pred
-load("data/alcyon_pred_ras.RData")
-alcyon_pred
+load("../data/pinkseafan_ras.RData")
+load("../data/deadmansfingers_ras.RData")
 
-# Function that returns raster predictions showing only probabilities > 0.5
-ras_pred_filt = function(raster_file){
-  tmpfilter = raster_file < 0.5
-  return(mask(raster_file, tmpfilter, maskvalue = 1))
-}
+# Plot heatmaps using tmap
+tm_shape(psf_raster)+
+  tm_raster(title = "", style = "cont", colorNA = "grey90")+
+  tm_facets(free.scales = FALSE)+
+  tm_layout(
+    # aes.palette = list(seq = "magma")
+    )
+
+
+
 
 # Create raster stack
 ras_fig3 = stack(ras_pred_filt(seafan_pred$seafan_ras_pred),

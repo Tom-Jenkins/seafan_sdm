@@ -83,10 +83,10 @@ psf_pres_thin = spThin::thin(
   locs.thinned.list.return = TRUE,
   write.files = FALSE,
   write.log.file = FALSE
-  ) %>% 
-  pluck(1) %>% 
-  as.data.frame %>% 
-  st_as_sf(coords = c("Longitude","Latitude"), crs = 4326) %>% 
+  ) %>%
+  pluck(1) %>%
+  as.data.frame %>%
+  st_as_sf(coords = c("Longitude","Latitude"), crs = 4326) %>%
   st_transform(crs = 3035)
 
 # Plot points on raster
@@ -362,38 +362,43 @@ sdm_data %>%
   summary
 
 
+# --------------- #
+#
+# Figure 2 ####
+#
+# --------------- #
+
+# Italic species labels
+E_ver = expression(italic("Eunicella verrucosa"))
+A_dig = expression(italic("Alcyonium digitatum"))
+
+# Variable facet order
+facet_order = c("bathymetry","slope","Rock50cm","OrbitalVelMean","TidalVelMean","Temp_FromKrige_3km_1951_2000","Oxy_FromKrige_3km_1951_2000","Arag_FromKrige_3km_1951_2000","Calc_FromKrige_3km_1951_2000")
+facet_labels = c("Bathymetry","Slope","Rock cover","Orbital velocity","Tidal velocity","Temperature","Oxygen concentration","Aragonite saturation state","Calcite saturation state")
+
 # Density plot
 sdm_data %>% 
   # transform data to long format for plotting
   pivot_longer(names_to = "Variable", values_to = "Values", cols = 5:15) %>%
   dplyr::filter(!Variable %in% c("Epc_FromKrige_3km_1951_2000","ph_FromKrige_3km_1951_2000")) %>% 
+  mutate(facet_var = factor(Variable, levels = facet_order, labels = facet_labels)) %>%
   # plot data
   ggplot(data = ., aes(x = Values, group = species, fill = species))+
-  geom_density(alpha = 0.5)+
-  facet_wrap(~Variable, scales = "free")+
-  scale_fill_manual(values = c("royalblue","deeppink"))+
+  geom_density(alpha = 0.5, adjust = 2)+
+  coord_cartesian(expand = TRUE)+
+  facet_wrap(~facet_var, scales = "free")+
+  scale_fill_manual(values = c("deeppink","royalblue"),
+                    limits = c("E_verrucosa","A_digitatum"),
+                    labels = c(E_ver,A_dig))+
+  ylab("Density")+
+  theme_bw()+
   theme(
     axis.title.x = element_blank(),
-    # axis.text.y = element_blank(),
-    legend.position = "top"
+    axis.title.y = element_text(size = 12),
+    strip.text = element_text(size = 12),
+    legend.text = element_text(size = 14),
+    legend.position = "top",
+    legend.title = element_blank()
   )
-
-# Violin plot
-sdm_data %>% 
-  # transform data to long format for plotting
-  pivot_longer(names_to = "Variable", values_to = "Values", cols = 5:15) %>% 
-  # plot data
-  ggplot(data = ., aes(x = Variable, y = Values, fill = species))+
-  geom_violin(show.legend = TRUE)+
-  facet_wrap(~Variable, scales = "free")+
-  coord_flip()+
-  scale_fill_manual(values = c("deeppink","royalblue"))+
-  theme(
-    axis.title = element_blank(),
-    axis.text.y = element_blank(),
-    legend.position = "top"
-  )
-  # ylab(expression(bold("Temperature ("^o*"C)")))+
-
-
+ggsave("../figures/Figure2.jpeg", width = 12, height = 8, dpi = 1200)
 

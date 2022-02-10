@@ -8,7 +8,7 @@
 # Prepare presence data
 # 1. Eunicella verrucosa
 # 2. Alyconium digitatum
-# 3. Stats for manuscript
+# 3. Figure 1
 #
 # Author: Tom Jenkins
 # Email: tom.l.jenkins@outlook.com
@@ -27,7 +27,6 @@ library(tmaptools)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(rnaturalearthhires)
-library(ggpubr)
 library(ggspatial)
 
 
@@ -203,7 +202,7 @@ europe = ne_countries(continent = "Europe", scale = "large", returnclass = "sf")
   st_transform(crs = 3035)
 
 # Crop to upper Bay of Biscay (extent of Strathclyde rasters)
-bb = raster::extent(2377837, 4263921, 2500000, 4650179) %>% st_bbox(crs = 3035)
+bb = raster::extent(2477837, 4263921, 2500000, 4650179) %>% st_bbox(crs = 3035)
 temperature = raster::crop(temperature, bb)
 plot(temperature)
 europe = st_crop(europe, bb)
@@ -214,7 +213,7 @@ plot_distribution = function(background, point_data, geo_extent = NULL, col = co
   ggplot()+
     geom_sf(data = background, colour = "black", fill = "#d9d9d9", size = 0.1)+
     # layer_spatial(data = background)+
-    geom_sf(data = point_data, shape = 21, fill = col, size = 1.5, stroke = 0.25, colour = "black")+
+    geom_sf(data = point_data, shape = 21, fill = col, size = 2, stroke = 0.1, colour = "black")+
     # coord_sf(expand = TRUE)+
     coord_sf(xlim = c(bb$xmin, bb$xmax), ylim = c(bb$ymin, bb$ymax), expand = FALSE)+
     scale_fill_gradientn(colours = heat.colors(30))+
@@ -247,31 +246,13 @@ dmf_distrib = plot_distribution(
 # Patchwork
 library(patchwork)
 plt_list = list(
-  psf_distrib,
+  psf_distrib + inset_element(jpeg_psf, 0.05, 0.8, 0.35, 1),
   dmf_distrib +
     theme(axis.text.y = element_blank(),
           axis.title.y = element_blank(),
-          axis.ticks.y = element_blank()) 
+          axis.ticks.y = element_blank())+
+    inset_element(jpeg_dmf, 0.05, 0.8, 0.35, 1)
 )
 wrap_plots(plt_list, ncol = 2, nrow = 1)
-# ggsave(filename = "../figures/Figure1.pdf", width = 8, height = 6)
-ggsave(filename = "../figures/Figure1.jpeg", width = 8, height = 6, dpi = 900)
+ggsave(filename = "../figures/Figure1.jpeg", width = 8, height = 5, dpi = 1200)
 
-
-# Figure 1
-fig1 = ggarrange(psf_range + annotation_custom(grob = ggplotGrob(jpeg_psf),
-                                               xmin = 2277837,
-                                               xmax = Inf,
-                                               ymin = 2500000,
-                                               ymax = Inf)+
-                   fig1_theme,
-                 dmf_range + annotation_custom(grob = ggplotGrob(jpeg_dmf),
-                                               xmin = 2277837,
-                                               xmax = Inf,
-                                               ymin = 2500000,
-                                               ymax = Inf)+
-                   fig1_theme
-)
-fig1
-# ggsave(plot = fig1, file = "figures/Figure1.png", width = 8, height = 5, dpi = 600)
-# ggsave(plot = fig1, file = "figures/Figure1.pdf", width = 8, height = 5)
