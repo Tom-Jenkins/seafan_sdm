@@ -316,8 +316,8 @@ plt_habsuit2 = function(ras, bbox = NULL, labs = "", image_path = NULL){
     tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5, text.size = 0.4)+
     tm_layout(
       legend.position = c("RIGHT","BOTTOM"),
-      legend.width = 0.25,
-      legend.height = 0.25,
+      legend.width = 0.22,
+      legend.height = 0.22,
       title = labs,
       title.position = c("LEFT","TOP"),
       title.size = 0.6
