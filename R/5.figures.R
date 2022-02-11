@@ -218,6 +218,12 @@ tmap_save(tm = hs, filename = "../figures/Figure4.png", width = 7, height = 4, d
 #
 #--------------#
 
+# Convert tmap to leaflet object
+hs_leaf = tmap_leaflet(hs1, mode = "view")
+saveWidget(hs_leaf, file = "../figures/Figure4_interactive.html", selfcontained = TRUE)
+
+
+
 # Convert rasters to polygons
 psf_poly1 = rasterToPolygons(psf_raster$psf_pred)
 dmf_poly1 = rasterToPolygons(dmf_raster$dmf_pred)
