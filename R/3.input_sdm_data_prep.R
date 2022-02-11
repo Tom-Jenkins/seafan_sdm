@@ -342,7 +342,7 @@ library(tidyverse)
 # Import presence data
 sdm_data = read_csv("../data/sdm_input_data.csv") %>% 
   dplyr::filter(pres_backgr == 1) %>% 
-  dplyr::select(str_subset(names(sdm_data), "2081_2100", negate = TRUE))
+  dplyr::select(str_subset(names(.), "2081_2100", negate = TRUE))
 sdm_data
 
 # Species
@@ -396,9 +396,10 @@ sdm_data %>%
     axis.title.x = element_blank(),
     axis.title.y = element_text(size = 12),
     strip.text = element_text(size = 12),
+    panel.grid = element_line(size = 0.1),
     legend.text = element_text(size = 14),
     legend.position = "top",
     legend.title = element_blank()
   )
-ggsave("../figures/Figure2.jpeg", width = 12, height = 8, dpi = 1200)
+ggsave("../figures/Figure2.pdf", width = 11, height = 8)
 

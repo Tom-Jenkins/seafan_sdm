@@ -2,7 +2,7 @@
 #
 # Species Distribution Modelling
 #
-# Jenkins and Stevens (2021) in prep
+# Jenkins and Stevens (2022) in prep
 #
 # R script purpose:
 # Figures for manuscript
@@ -50,7 +50,7 @@ library(patchwork)
 # --------------- #
 
 # Import rasters
-load("../data/ras_predictors.RData")
+ras_predictors = raster::stack("../data/ras_predictors.grd")
 names(ras_predictors)
 
 # Merge rasters
@@ -58,7 +58,7 @@ ras_static = raster::stack(
   raster::raster("../data/raster_predictors/bathymetry.tif"),
   ras_predictors) %>% 
   raster::subset(str_subset(names(.), "Temp|Oxy|Calc", negate = TRUE))
-names(rasters)
+names(ras_static)
 
 # Import dynamic rasters
 ras_dynamic = raster::stack("../data/raster_predictors/env_rasters.tif") %>% 
@@ -148,6 +148,7 @@ plt_varcontrib = function(df, Species = ""){
             axis.title.x = element_text(size = 8),
             axis.text.y = element_text(size = 9),
             legend.title = element_blank(),
+            panel.grid = element_line(size = 0.1),
             plot.title = element_text(size = 10))
 }
 
@@ -164,8 +165,7 @@ plt_varA +
   plt_varB + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
-ggsave("../figures/Figure3.jpeg", width = 7, height = 4.5, dpi = 1200)
-
+ggsave("../figures/Figure3.pdf", width = 7, height = 4)
 
 
 #--------------#
@@ -175,8 +175,8 @@ ggsave("../figures/Figure3.jpeg", width = 7, height = 4.5, dpi = 1200)
 #--------------#
 
 # Import raster predictions
-load("../data/pinkseafan_ras.RData")
-load("../data/deadmansfingers_ras.RData")
+psf_raster = raster::stack("../data/pinkseafan_ras.grd")
+dmf_raster = raster::stack("../data/deadmansfingers_ras.grd")
 
 # Bounding box
 bb = raster::extent(2577837, 4263921, 2500000, 4550179)

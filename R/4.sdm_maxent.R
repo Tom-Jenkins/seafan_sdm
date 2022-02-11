@@ -55,7 +55,7 @@ names(ras_predictors)
 vifcor(ras_predictors, maxobservations = ncell(ras_predictors), th = 0.70)
 
 # Export raster predictors as .RData object
-save(ras_predictors, file = "../data/ras_predictors.RData")
+raster::writeRaster(ras_predictors, filename = "../data/ras_predictors.grd")
 
 
 # --------------- #
@@ -228,7 +228,7 @@ tmap_arrange(psf_tm1, psf_tm2)
 # Export raster predictions
 psf_raster = raster::stack(psf_pred, psf_pred_future) %>% 
   set_names(c("psf_pred","psf_pred_future"))
-save(psf_raster, file = "../data/pinkseafan_ras.RData")
+raster::writeRaster(psf_raster, filename = "../data/pinkseafan_ras.grd")
 
 
 
@@ -400,7 +400,7 @@ tmap_arrange(dmf_tm1, dmf_tm2)
 # Export raster predictions
 dmf_raster = raster::stack(dmf_pred, dmf_pred_future) %>% 
   set_names(c("dmf_pred","dmf_pred_future"))
-save(dmf_raster, file = "../data/deadmansfingers_ras.RData")
+raster::writeRaster(dmf_raster, filename = "../data/deadmansfingers_ras.grd")
 
 
 
@@ -430,8 +430,8 @@ plot_gt = function(maxent_res_df, title = ""){
 }
 (psf_gt = plot_gt(psf_maxent@results, title = "Eunicella verrucosa"))
 (dmf_gt = plot_gt(dmf_maxent@results, title = "Alcyonium digitatum"))
-gtsave(psf_gt, filename = "../figures/gt_psf.png")
-gtsave(dmf_gt, filename = "../figures/gt_dmf.png")
+gtsave(psf_gt, filename = "../figures/gt_psf.pdf")
+gtsave(dmf_gt, filename = "../figures/gt_dmf.pdf")
 
 
 
