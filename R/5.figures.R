@@ -259,31 +259,43 @@ l1 = leaflet() %>%
              primaryAreaUnit = "sqmeters") %>% 
   # Add pink sea fan raster
   addRasterImage(psf_raster$psf_pred, colors = col_bin, opacity = 0.8,
-                 group = "Pink sea fan habitat suitability") %>% 
+                 group = "Pink sea fan") %>% 
   # Add pink sea fan presence points
   addCircles(data = psf_pres, color = "black", weight = 1, radius = 500,
              fillColor = "deeppink", fillOpacity = 1,
-             group = "PSF presence observations"
+             group = "PSF observations"
   ) %>%
   # Add dead man's fingers raster
   addRasterImage(dmf_raster$dmf_pred, colors = col_bin, opacity = 0.8,
-                 group = "Dead man's fingers habitat suitability") %>% 
+                 group = "Dead man's fingers") %>% 
   # Add dead man's fingers presence points
   addCircles(data = dmf_pres, color = "black", weight = 1, radius = 500,
              fillColor = "royalblue", fillOpacity = 1,
-             group = "DMF presence observations"
+             group = "DMF observations"
   ) %>% 
   # Add layers control
   addLayersControl(
     options = layersControlOptions(collapsed = FALSE),
-    baseGroups = c("Pink sea fan habitat suitability","Dead man's fingers habitat suitability"),
-    overlayGroups = c("PSF presence observations", "DMF presence observations")
+    baseGroups = c("Pink sea fan","Dead man's fingers"),
+    overlayGroups = c("PSF observations", "DMF observations")
     ) %>%   
-  hideGroup(c("Dead man's fingers habitat suitability", "PSF presence observations", "DMF presence observations")) %>%
+  hideGroup(c("Dead man's fingers", "PSF observations", "DMF observations")) %>%
   # Add legend
   addLegend(title = "Habitat suitability", pal = col_bin, values = ras_bin, opacity = 0.80) %>% 
   # Add permanent title
-  addControl(map_title, position = "bottomleft")
+  addControl(map_title, position = "bottomleft") %>%
+  # Base group title
+  htmlwidgets::onRender("
+        function() {
+            $('.leaflet-control-layers-base').prepend('<label style=\"text-align:left\"><strong>Habitat suitability</strong></label>');
+        }
+    ") %>% 
+  # Overlay group title
+  htmlwidgets::onRender("
+        function() {
+            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:left\"><strong>Presence observations</strong></label>');
+        }
+    ")
 l1
 saveWidget(l1, file = "../figures/Figure4_interactive.html", title = "Figure4")
 
