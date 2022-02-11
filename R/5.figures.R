@@ -32,8 +32,12 @@ library(leaflet.extras2)
 library(leafem)
 library(htmltools)
 library(htmlwidgets)
-library(RColorBrewer)
+library(viridis)
 library(patchwork)
+
+# Species italics label
+psf_lab = expression(italic("Eunicella verrucosa"))
+dmf_lab = expression(italic("Alcyonium digitatum"))
 
 # Import UK basemap from rnaturalworld package
 # uk = ne_countries(continent = "Europe", scale = "large", returnclass = "sf") %>%
@@ -180,36 +184,30 @@ dmf_raster = raster::stack("../data/deadmansfingers_ras.grd")
 
 # Bounding box
 bb = raster::extent(2577837, 4263921, 2500000, 4550179)
-bb_psf = raster::extent(2777837, 4263921, 2600000, 4050179)
-bb2 = raster::extent(2777837, 4263921, 3450179, 4550179)
-
-# Copied from below
-# figS3 = tm_shape(ras_figS3)+ tm_raster(title = "Habitat suitability", palette = "-RdYlBu")+
-#   tm_shape(uk, bbox = bb)+ tm_polygons(lwd = 0.2, border.col = "black")+
-#   tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.7)+
-#   tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5)+
-#   tm_layout(panel.labels = fig3_facet_lab, panel.label.size = 0.8,
-#             legend.outside = FALSE, legend.height = 0.15, legend.text.size = 0.7, legend.title.size = 1)
-# 
-# figS3
+bb2 = raster::extent(2777837, 4003921, 2600000, 4232179)
 
 # Plot heatmaps using tmap
-plt_habsuit = function(ras, bbox = NULL){
-  if(is.null(bbox) == FALSE){
-    ras = crop(ras, bbox)
-  }
+plt_habsuit = function(ras, bbox = NULL, labs = "", image_path = NULL){
   ras %>% 
-    tm_shape(.)+
-    tm_raster(palette = "YlOrRd")+
+    tm_shape(., bbox = bbox)+
+    tm_raster(title = "Habitat suitability", palette = "-inferno")+
+    tm_compass(type = "arrow", position = c(0.01,0.06), size = 0.5, text.size = 0.5)+
+    tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5, text.size = 0.4)+
     tm_layout(
-      legend.position = c("right","bottom")
-    )
+      legend.position = c("RIGHT","BOTTOM"),
+      legend.width = 0.20,
+      legend.height = 0.20,
+      title = labs,
+      title.position = c("LEFT","TOP"),
+      title.size = 0.8
+    )+
+    tm_logo(image_path, position = c("RIGHT","TOP"), height = 1.8)
 }
-hs1 = plt_habsuit(psf_raster$psf_pred, bbox = bb)
-hs2 = plt_habsuit(dmf_raster$dmf_pred, bbox = bb)
+hs1 = plt_habsuit(psf_raster$psf_pred, bbox = bb2, labs = "A", image_path = "../images/E_verrucosa_JRS.png")
+hs2 = plt_habsuit(dmf_raster$dmf_pred, bbox = bb, labs = "B", image_path = "../images/A_digitatum_JRS.png")
 hs = tmap_arrange(hs1, hs2)
 hs
-tmap_save(tm = hs, filename = "../figures/Figure4.png", width = 7, height = 4, dpi = 1200)
+tmap_save(tm = hs, filename = "../figures/Figure4.png", width = 6.5, height = 4, dpi = 1200)
 
 
 #--------------#
@@ -218,141 +216,122 @@ tmap_save(tm = hs, filename = "../figures/Figure4.png", width = 7, height = 4, d
 #
 #--------------#
 
-# Convert tmap to leaflet object
-hs_leaf = tmap_leaflet(hs1, mode = "view")
-saveWidget(hs_leaf, file = "../figures/Figure4_interactive.html", selfcontained = TRUE)
-
-
-
-# Convert rasters to polygons
-psf_poly1 = rasterToPolygons(psf_raster$psf_pred)
-dmf_poly1 = rasterToPolygons(dmf_raster$dmf_pred)
-
-# Round habitat suitability to 3 decimal places
-round_probs = function(x) { sprintf("%.3f", x) }
-psf_poly1[[1]] = round_probs(psf_poly1[[1]])
-dmf_poly1[[1]] = round_probs(dmf_poly1[[1]])
-
-# Import all presence points to sf object and set CRS
+# Import presence points
 psf_pres = read_csv("../data/pinkseafan_presence_pts.csv") %>% 
   st_as_sf(., coords = c("lon","lat"), crs = 4326)
 dmf_pres = read_csv("../data/deadmansfingers_presence_pts.csv") %>% 
   st_as_sf(., coords = c("lon","lat"), crs = 4326)
 
 # Colours for raster
-display.brewer.pal(n = 5, name = "YlOrRd")
-ras_cols = brewer.pal(5, "YlOrRd") %>% rev
+ras_cols = rev(inferno(5))
 
 # Bins
 ras_bin = seq(0, 1, by = 0.2)
 
 # Colour bin
 col_bin = colorBin(palette = ras_cols, bins = ras_bin, domain = ras_bin, na.color = "transparent")
-  
-# Figure 3 interactive version
+
+# Title
+map_title = tags$div(
+  HTML("<strong>Jenkins & Stevens 2022: Figure 4</strong>")
+) 
+
+# Leaflet map
 l1 = leaflet() %>%
-  # Add mouse coordinates at top of map
-  addMouseCoordinates() %>%
-  # Add an inset minimap
+  setView(lng = -4.1, lat = 55.0, zoom = 5) %>%
+  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+  # Add a minimap
   addMiniMap(
     position = "topright",
     tiles = providers$OpenStreetMap,
     toggleDisplay = TRUE) %>%
-  # Add logo and link at the top of the map
-  leafem::addLogo(
-    img = "https://tomjenkins.netlify.app/project/pinkseafan/featured_hu6b938d805fc03dfee7e876a850589a8a_2399056_720x0_resize_q90_lanczos.JPG",
-    url = "https://tomjenkins.netlify.app/project/pinkseafan/",
-    src = "remote",
-    position = "topleft", width = 150, height = 105
-  ) %>% 
+  # Reset map to default setting
+  addResetMapButton() %>% 
   # Add a scalebar
   addScaleBar(
     position = "bottomright",
     options = scaleBarOptions(imperial = FALSE)
   ) %>%
-  # Reset map to default setting
-  addResetMapButton() %>% 
   # Add measurement tool
   addMeasure(position = "topleft",
              primaryLengthUnit = "meters",
              secondaryLengthUnit = "kilometers",
              primaryAreaUnit = "sqmeters") %>% 
-  # Add basemap
-  addProviderTiles(providers$OpenStreetMap) %>%
-  # Add seafan polygons
-  addPolygons(data = psf_poly1, group = "Eunicella verrucosa",
-              fillColor = ~col_bin(psf_poly1[[1]] %>% as.numeric),
-              fillOpacity = 0.80,
-              stroke = 1, weight = 0.2, color = "black",
-              popup = ~htmlEscape(psf_poly1[[1]])) %>%
-  # Add seafan presence points
-  addCircles(data = psf_pres, color = "black", weight = 1, radius = 300,
-             fillColor = "deeppink", fillOpacity = 0.8,
-             group = "E. verrucosa presence points"
-  ) %>% 
-  # Add alcyon polygons
-  addPolygons(data = dmf_poly1, group = "Alcyonium digitatum",
-              fillColor = ~col_bin(dmf_poly1[[1]] %>% as.numeric),
-              fillOpacity = 0.80,
-              stroke = 1, weight = 0.2, color = "black",
-              popup = ~htmlEscape(dmf_poly1[[1]])) %>%
-  # Add alcyon presence points
-  addCircles(data = dmf_pres, color = "black", weight = 1, radius = 300,
-             fillColor = "royalblue", fillOpacity = 0.8,
-             group = "A. digitatum presence points"
+  # Add pink sea fan raster
+  addRasterImage(psf_raster$psf_pred, colors = col_bin, opacity = 0.8,
+                 group = "Pink sea fan habitat suitability") %>% 
+  # Add pink sea fan presence points
+  addCircles(data = psf_pres, color = "black", weight = 1, radius = 500,
+             fillColor = "deeppink", fillOpacity = 1,
+             group = "PSF presence observations"
+  ) %>%
+  # Add dead man's fingers raster
+  addRasterImage(dmf_raster$dmf_pred, colors = col_bin, opacity = 0.8,
+                 group = "Dead man's fingers habitat suitability") %>% 
+  # Add dead man's fingers presence points
+  addCircles(data = dmf_pres, color = "black", weight = 1, radius = 500,
+             fillColor = "royalblue", fillOpacity = 1,
+             group = "DMF presence observations"
   ) %>% 
   # Add layers control
-  addLayersControl(options = layersControlOptions(collapsed = FALSE),
-                   baseGroups = c("Eunicella verrucosa","Alcyonium digitatum"),
-                   overlayGroups = c("E. verrucosa presence points", "A. digitatum presence points")
-  ) %>%   
-  hideGroup(c("Alcyonium digitatum", "E. verrucosa presence points", "A. digitatum presence points")) %>%
+  addLayersControl(
+    options = layersControlOptions(collapsed = FALSE),
+    baseGroups = c("Pink sea fan habitat suitability","Dead man's fingers habitat suitability"),
+    overlayGroups = c("PSF presence observations", "DMF presence observations")
+    ) %>%   
+  hideGroup(c("Dead man's fingers habitat suitability", "PSF presence observations", "DMF presence observations")) %>%
   # Add legend
-  addLegend(title = "Habitat suitability", pal = col_bin, values = ras_bin, opacity = 0.80)
+  addLegend(title = "Habitat suitability", pal = col_bin, values = ras_bin, opacity = 0.80) %>% 
+  # Add permanent title
+  addControl(map_title, position = "bottomleft")
 l1
-saveWidget(l1, file = "../figures/Figure4_interactive.html", selfcontained = TRUE)
-
-
-
+saveWidget(l1, file = "../figures/Figure4_interactive.html", title = "Figure4")
 
 
 
 #--------------#
 #
-# Figure S2 ####
+# Visualise future habitat suitability ####
 #
 #--------------#
 
-# Import background point data
-seafan_bgr_pts = read.csv("data/seafan_bgr_pts.csv")
-alcyon_bgr_pts = read.csv("data/alcyon_bgr_pts.csv")
+# Plot heatmaps using tmap
+plt_habsuit2 = function(ras, bbox = NULL, labs = "", image_path = NULL){
+  ras %>% 
+    tm_shape(., bbox = bbox)+
+    tm_raster(title = "Habitat suitability", palette = "-inferno")+
+    tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.5, text.size = 0.5)+
+    tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5, text.size = 0.4)+
+    tm_layout(
+      legend.position = c("RIGHT","BOTTOM"),
+      legend.width = 0.25,
+      legend.height = 0.25,
+      title = labs,
+      title.position = c("LEFT","TOP"),
+      title.size = 0.6
+    )+
+    tm_logo(image_path, position = c("RIGHT","TOP"), height = 1.2)
+}
 
-# Plot background points
-psf_bgpts = ggplot()+
-  geom_sf(data = uk, colour = "black", fill = "grey", size = 0.2)+
-  geom_point(data = seafan_bgr_pts, aes(x = lon, y = lat),
-             shape = 21, fill = "white", colour = "black", size = 1)+
-  coord_sf(xlim = c(bb@xmin,bb@xmax), ylim = c(bb@ymin,bb@ymax), expand = FALSE)+
-  xlab("Longitude")+
-  ylab("Latitude")+
-  ggtitle(expression(italic("Eunicella verrucosa")*": background points"))
-psf_bgpts
-dmf_bgpts = ggplot()+
-  geom_sf(data = uk, colour = "black", fill = "grey", size = 0.2)+
-  geom_point(data = alcyon_bgr_pts, aes(x = lon, y = lat),
-             shape = 21, fill = "white", colour = "black", size = 1)+
-  coord_sf(xlim = c(bb@xmin,bb@xmax), ylim = c(bb@ymin,bb@ymax), expand = FALSE)+
-  xlab("Longitude")+
-  ylab("")+
-  ggtitle(expression(italic("Alcyonium digitatum")*": background points"))
-dmf_bgpts
+# Pink sea fan present-day
+psf_pre = plt_habsuit2(psf_raster$psf_pred, bbox = bb, image_path = "../images/E_verrucosa_JRS.png")
 
-# Figure S2
-figS2 = ggarrange(psf_bgpts + fig1_theme,
-                  dmf_bgpts + fig1_theme)
-figS2
-ggsave(plot = figS2, file = "figures/FigureS2.png", width = 8, height = 5, dpi = 600)
-ggsave(plot = figS2, file = "figures/FigureS2.pdf", width = 8, height = 5)
+# Pink sea fan future
+psf_fut = plt_habsuit2(psf_raster$psf_pred_future, bbox = bb, image_path = "../images/E_verrucosa_JRS.png")
 
+# Dead man's fingers present-day
+dmf_pre = plt_habsuit2(dmf_raster$dmf_pred, bbox = bb, image_path = "../images/A_digitatum_JRS.png")
 
+# Dead man's fingers future
+dmf_fut = plt_habsuit2(dmf_raster$dmf_pred_future, bbox = bb, image_path = "../images/A_digitatum_JRS.png")
+
+# Arrange plots
+hs_fut = tmap_arrange(ncol = 2,
+  psf_pre + tm_layout(title = "Present-day"),
+  psf_fut + tm_layout(title = "2081-2100 RCP 8.5"), 
+  dmf_pre + tm_layout(title = "Present-day"),
+  dmf_fut + tm_layout(title = "2081-2100 RCP 8.5")
+  )
+# hs_fut
+tmap_save(tm = hs_fut, filename = "../figures/Figure5.png", width = 5, height = 6, dpi = 1200)
 
