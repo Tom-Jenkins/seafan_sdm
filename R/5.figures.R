@@ -195,16 +195,16 @@ plt_habsuit = function(ras, bbox = NULL, labs = "", image_path = NULL){
     tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5, text.size = 0.4)+
     tm_layout(
       legend.position = c("RIGHT","BOTTOM"),
-      legend.width = 0.20,
-      legend.height = 0.20,
+      legend.width = 0.23,
+      legend.height = 0.23,
       title = labs,
       title.position = c("LEFT","TOP"),
-      title.size = 0.8
+      title.size = 0.7
     )+
     tm_logo(image_path, position = c("RIGHT","TOP"), height = 1.8)
 }
-hs1 = plt_habsuit(psf_raster$psf_pred, bbox = bb2, labs = "A", image_path = "../images/E_verrucosa_JRS.png")
-hs2 = plt_habsuit(dmf_raster$dmf_pred, bbox = bb, labs = "B", image_path = "../images/A_digitatum_JRS.png")
+hs1 = plt_habsuit(psf_raster$psf_pred, bbox = bb2, labs = "Present-day", image_path = "../images/E_verrucosa_JRS.png")
+hs2 = plt_habsuit(dmf_raster$dmf_pred, bbox = bb, labs = "Present-day", image_path = "../images/A_digitatum_JRS.png")
 hs = tmap_arrange(hs1, hs2)
 hs
 tmap_save(tm = hs, filename = "../figures/Figure4.png", width = 6.5, height = 4, dpi = 1200)
@@ -298,7 +298,6 @@ l1 = leaflet() %>%
     ")
 l1
 saveWidget(l1, file = "../figures/Figure4_interactive.html", title = "Figure4")
-
 
 
 #--------------#
