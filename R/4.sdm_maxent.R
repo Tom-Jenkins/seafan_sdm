@@ -430,11 +430,7 @@ plot_gt = function(maxent_res_df, title = ""){
 }
 (psf_gt = plot_gt(psf_maxent@results, title = "Eunicella verrucosa"))
 (dmf_gt = plot_gt(dmf_maxent@results, title = "Alcyonium digitatum"))
-gtsave(psf_gt, filename = "../figures/gt_psf.pdf")
-gtsave(dmf_gt, filename = "../figures/gt_dmf.pdf")
-
-
-
-
+gtsave(psf_gt, filename = "../figures/gt_psf.tex")
+gtsave(dmf_gt, filename = "../figures/gt_dmf.tex")
 
 

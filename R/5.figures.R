@@ -196,8 +196,9 @@ plt_habsuit = function(ras, bbox = NULL, labs = "", image_path = NULL){
     tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5, text.size = 0.4)+
     tm_layout(
       legend.position = c("RIGHT","BOTTOM"),
-      legend.width = 0.23,
-      legend.height = 0.23,
+      legend.width = 0.22,
+      legend.height = 0.22,
+      legend.text.size = 0.5,
       title = labs,
       title.position = c("LEFT","TOP"),
       title.size = 0.7
@@ -308,13 +309,12 @@ saveWidget(l1, file = "../figures/Figure4_interactive.html", title = "Figure4")
 #--------------#
 
 # Plot heatmaps using tmap
-plt_habsuit2 = function(ras, bbox = NULL, labs = "", image_path = NULL){
-  ras %>% 
+plt_habsuit2 = function(ras, bbox = NULL, labs = "", image_path = NULL, compass_bar = TRUE, showlegend = TRUE){
+  temp_ras = ras %>% 
     tm_shape(., bbox = bbox)+
     tm_raster(title = "Habitat suitability", palette = "-inferno")+
-    tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.5, text.size = 0.5)+
-    tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5, text.size = 0.4)+
     tm_layout(
+      legend.show = showlegend,
       legend.position = c("RIGHT","BOTTOM"),
       legend.width = 0.22,
       legend.height = 0.22,
@@ -323,19 +323,27 @@ plt_habsuit2 = function(ras, bbox = NULL, labs = "", image_path = NULL){
       title.size = 0.6
     )+
     tm_logo(image_path, position = c("RIGHT","TOP"), height = 1.2)
+  
+  if(compass_bar == TRUE){
+    temp_ras = temp_ras+ tm_compass(type = "arrow", position = c(0.01,0.08), size = 0.5, text.size = 0.5)
+  }
+  if(compass_bar == TRUE){
+    temp_ras = temp_ras+ tm_scale_bar(position = c(0.01,0.01), breaks = c(0,100,200), lwd = 0.5, text.size = 0.4)
+  }
+  return(temp_ras)
 }
 
 # Pink sea fan present-day
-psf_pre = plt_habsuit2(psf_raster$psf_pred, bbox = bb, image_path = "../images/E_verrucosa_JRS.png")
+psf_pre = plt_habsuit2(psf_raster$psf_pred, bbox = bb, image_path = "../images/E_verrucosa_JRS.png", showlegend = FALSE)
 
 # Pink sea fan future
-psf_fut = plt_habsuit2(psf_raster$psf_pred_future, bbox = bb, image_path = "../images/E_verrucosa_JRS.png")
+psf_fut = plt_habsuit2(psf_raster$psf_pred_future, bbox = bb, image_path = "../images/E_verrucosa_JRS.png", compass_bar = FALSE)
 
 # Dead man's fingers present-day
-dmf_pre = plt_habsuit2(dmf_raster$dmf_pred, bbox = bb, image_path = "../images/A_digitatum_JRS.png")
+dmf_pre = plt_habsuit2(dmf_raster$dmf_pred, bbox = bb, image_path = "../images/A_digitatum_JRS.png", showlegend = FALSE)
 
 # Dead man's fingers future
-dmf_fut = plt_habsuit2(dmf_raster$dmf_pred_future, bbox = bb, image_path = "../images/A_digitatum_JRS.png")
+dmf_fut = plt_habsuit2(dmf_raster$dmf_pred_future, bbox = bb, image_path = "../images/A_digitatum_JRS.png", compass_bar = FALSE)
 
 # Arrange plots
 hs_fut = tmap_arrange(ncol = 2,

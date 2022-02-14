@@ -203,24 +203,16 @@ europe = ne_countries(continent = "Europe", scale = "large", returnclass = "sf")
 
 # Crop to upper Bay of Biscay (extent of Strathclyde rasters)
 bb = raster::extent(2477837, 4263921, 2500000, 4650179) %>% st_bbox(crs = 3035)
-temperature = raster::crop(temperature, bb)
-plot(temperature)
-europe = st_crop(europe, bb)
-plot(europe)
 
 # Function to plot distribution
-plot_distribution = function(background, point_data, geo_extent = NULL, col = col){
-  ggplot()+
+plot_distribution = function(background, point_data, geo_extent = NULL, col = col, arrowscale = TRUE){
+  temp_plt = ggplot()+
     geom_sf(data = background, colour = "black", fill = "#d9d9d9", size = 0.1)+
     # layer_spatial(data = background)+
     geom_sf(data = point_data, shape = 21, fill = col, size = 2, stroke = 0.1, colour = "black")+
     # coord_sf(expand = TRUE)+
     coord_sf(xlim = c(bb$xmin, bb$xmax), ylim = c(bb$ymin, bb$ymax), expand = FALSE)+
     scale_fill_gradientn(colours = heat.colors(30))+
-    annotation_north_arrow(data = europe, location = "bl", height = unit(0.4, "cm"), width = unit(0.4, "cm"),
-                           pad_y = unit(0.5, "cm"), style = north_arrow_orienteering(text_size = 4))+
-    annotation_scale(data = europe, location = "bl", bar_cols = c("black","white"),
-                     height = unit(0.15, "cm"), width_hint = 0.15, text_cex = 0.5)+
     xlab("Longitude")+
     ylab("Latitude")+
     theme(
@@ -231,6 +223,16 @@ plot_distribution = function(background, point_data, geo_extent = NULL, col = co
       panel.border = element_rect(fill = NA, colour = "black", size = 0.3),
       plot.title = element_text(size = 10, face = "bold")
     )
+  if(arrowscale == TRUE){
+    temp_plt = temp_plt +
+      annotation_north_arrow(
+        data = europe, location = "bl", height = unit(0.4, "cm"), width = unit(0.4, "cm"),
+        pad_y = unit(0.5, "cm"), style = north_arrow_orienteering(text_size = 4))+
+      annotation_scale(
+        data = europe, location = "bl", bar_cols = c("black","white"),
+        height = unit(0.15, "cm"), width_hint = 0.15, text_cex = 0.5)
+  }
+  return(temp_plt)
 }
 
 # Pink sea fan distribution
@@ -240,18 +242,30 @@ psf_distrib = plot_distribution(
 
 # Dead man's fingers distribution
 dmf_distrib = plot_distribution(
-  background = europe, point_data = dead_sf, col = "royalblue")+
+  background = europe, point_data = dead_sf, col = "royalblue", arrowscale = FALSE)+
   ggtitle(expression(italic("Alcyonium digitatum")))
+
+# Inset map of Europe
+inset_europe = ggplot(data = europe)+
+  geom_sf(size = 0.05)+
+  coord_sf(xlim = c(1907837, 6063921), ylim = c(1590000, 5650179), expand = FALSE)+
+  geom_rect(fill = NA, col = "black", size = 0.5, xmin = bb$xmin, xmax = bb$xmax, ymin = bb$ymin, ymax = bb$ymax)+
+  theme_void()+
+  theme(
+    panel.background = element_rect(fill = "white"),
+    panel.border = element_rect(fill = NA, colour = "black"))
+inset_europe
 
 # Patchwork
 library(patchwork)
 plt_list = list(
-  psf_distrib + inset_element(jpeg_psf, 0.05, 0.8, 0.35, 1),
+  psf_distrib + inset_element(jpeg_psf, 0, 0.8, 0.30, 1, align_to = "panel"),
   dmf_distrib +
     theme(axis.text.y = element_blank(),
           axis.title.y = element_blank(),
           axis.ticks.y = element_blank())+
-    inset_element(jpeg_dmf, 0.05, 0.8, 0.35, 1)
+    inset_element(jpeg_dmf, 0, 0.8, 0.30, 1, align_to = "panel")+
+    inset_element(inset_europe, 0.02, 0, 0.22, 0.20)
 )
 wrap_plots(plt_list, ncol = 2, nrow = 1)
 ggsave(filename = "../figures/Figure1.jpeg", width = 8, height = 5, dpi = 1200)
