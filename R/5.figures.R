@@ -70,6 +70,12 @@ ras_dynamic = raster::stack("../data/raster_predictors/env_rasters.tif") %>%
   raster::subset(str_subset(names(.), "Temp|Oxy|Calc|Arag"))
 names(ras_dynamic)
 
+# Dynamic stats for manuscript
+(ras_dynamic$Temp_FromKrige_3km_2081_2100 - ras_dynamic$Temp_FromKrige_3km_1951_2000) %>% summary %>% round(2)
+(ras_dynamic$Oxy_FromKrige_3km_1951_2000 - ras_dynamic$Oxy_FromKrige_3km_2081_2100) %>% summary %>% round(2)
+(ras_dynamic$Calc_FromKrige_3km_1951_2000 - ras_dynamic$Calc_FromKrige_3km_2081_2100) %>% summary %>% round(2)
+
+
 # Plot static raster heatmaps
 plt_static = tm_shape(ras_static)+
   tm_raster(title = "", style = "cont")+

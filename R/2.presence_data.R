@@ -268,5 +268,5 @@ plt_list = list(
     inset_element(inset_europe, 0.02, 0, 0.22, 0.20)
 )
 wrap_plots(plt_list, ncol = 2, nrow = 1)
-ggsave(filename = "../figures/Figure1.jpeg", width = 8, height = 5, dpi = 1200)
+ggsave(filename = "../figures/Figure1.png", width = 8, height = 5, dpi = 1200)
 
