@@ -34,6 +34,7 @@ library(htmltools)
 library(htmlwidgets)
 library(viridis)
 library(patchwork)
+library(glue)
 
 # Species italics label
 psf_lab = expression(italic("Eunicella verrucosa"))
@@ -263,7 +264,7 @@ l1 = leaflet() %>%
   # Add pink sea fan presence points
   addCircles(data = psf_pres, color = "black", weight = 1, radius = 500,
              fillColor = "deeppink", fillOpacity = 1,
-             group = "PSF observations"
+             group = glue("PSF (N={nrow(psf_pres)})")
   ) %>%
   # Add dead man's fingers raster
   addRasterImage(dmf_raster$dmf_pred, colors = col_bin, opacity = 0.8,
@@ -271,15 +272,15 @@ l1 = leaflet() %>%
   # Add dead man's fingers presence points
   addCircles(data = dmf_pres, color = "black", weight = 1, radius = 500,
              fillColor = "royalblue", fillOpacity = 1,
-             group = "DMF observations"
+             group = glue("DMF (N={nrow(dmf_pres)})")
   ) %>% 
   # Add layers control
   addLayersControl(
     options = layersControlOptions(collapsed = FALSE),
     baseGroups = c("Pink sea fan","Dead man's fingers"),
-    overlayGroups = c("PSF observations", "DMF observations")
+    overlayGroups = c(glue("PSF (N={nrow(psf_pres)})"), glue("DMF (N={nrow(dmf_pres)})"))
     ) %>%   
-  hideGroup(c("Dead man's fingers", "PSF observations", "DMF observations")) %>%
+  hideGroup(c("Dead man's fingers", glue("PSF (N={nrow(psf_pres)})"), glue("DMF (N={nrow(dmf_pres)})"))) %>%
   # Add legend
   addLegend(title = "Habitat suitability", pal = col_bin, values = ras_bin, opacity = 0.80) %>% 
   # Add permanent title
