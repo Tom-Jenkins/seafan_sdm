@@ -1,5 +1,5 @@
 ---
-title: "Habitat suitability and potential range shifts under projected climate change in two temperate octocorals using species distribution modelling"
+title: "Predicting habitat suitability and range shifts under projected climate change for two octocorals in the north-east Atlantic"
 subtitle: "Supplementary Figures"
 author: "Jenkins and Stevens (in review)"
 output:
@@ -18,36 +18,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 <!-- # Figure S1 -->
 ## Figure S1
-```{r, include=TRUE, fig.align="center", echo=FALSE, out.width = "100%"}
-knitr::include_graphics("./figures/FigureS1.png")
+```{r, include=TRUE, fig.align="left", echo=FALSE, out.width = "100%"}
+knitr::include_graphics("../figures/FigureS1A.png")
 ```
-\textbf{Figure S1.} Thematic map of each raster predictor variable used in the species distribution models. BO21_tempmin_bdmin = minimum sea bottom temperature; MS_bathy_5m = bathymetry; MS_biogeo06_bathy_slope_5m = slope; BO_calcite = calcite concentration at sea surface; BO_ph = pH at sea surface; Rock50cm = proportion of rock cover; OrbitalVelMean = wave orbital velocity; TidalVelMean = tidal velocity. 
-
-\newpage
+\textbf{Figure S1.} Thematic map of each raster predictor variable used in the species distribution models.
+```{r, include=TRUE, fig.align="left", echo=FALSE, out.width = "100%"}
+knitr::include_graphics("../figures/FigureS1Bi.png")
+```
+\textbf{Figure S1.} Thematic map of each raster predictor variable used in the species distribution models.
+```{r, include=TRUE, fig.align="left", echo=FALSE, out.width = "100%"}
+knitr::include_graphics("../figures/FigureS1Bii.png")
+```
+\textbf{Figure S1.} Thematic map of each raster predictor variable used in the species distribution models.
 
 <!-- # Figure S2 -->
 ## Figure S2
-```{r, include=TRUE, fig.align="center", echo=FALSE, out.width = "100%"}
-knitr::include_graphics("./figures/FigureS2.png")
+```{r, include=TRUE, fig.align="left", echo=FALSE, fig.show="hold", out.width="45%", out.height="80%"}
+knitr::include_graphics(c("../figures/gt_psf.png", "../figures/gt_dmf.png"))
 ```
-\textbf{Figure S2.} Map of the background points used in the Maxent species distribution models for the pink sea fan (\textit{Eunicella verrucosa}) and dead man's fingers (\textit{Alcyonium digitatum}).
-
-\newpage
-
-<!-- # Figure S3 -->
-## Figure S3  
-```{r, include=TRUE, fig.align="center", echo=FALSE, out.width = "100%"}
-knitr::include_graphics("./figures/FigureS3.png")
-```
-\textbf{Figure S3.} Present-day maps of habitat suitability for the pink sea fan (\textit{Eunicella verrucosa}) and dead man's fingers (\textit{Alcyonium digitatum}) based on Maxent species distribution models. Probability of presence is interpreted as a proxy for habitat suitability; all probabilities from the models are shown.
-
-\newpage
-
-<!-- # Figure S4 -->
-## Figure S4 
-```{r, include=TRUE, fig.align="center", echo=FALSE, out.width = "100%"}
-knitr::include_graphics("./figures/FigureS4.png")
-```
-\textbf{Figure S4.} Future predictions of habitat suitability for the pink sea fan (\textit{Eunicella verrucosa}) based on a Maxent species distribution model. Future layers of sea bottom temperature were substituted for the present-day layer while all other layers used to originally train the model were kept; the model was then re-run to generate future predictions. Predictions for Representative Concentration Pathway (RCP) 8.5 are shown for 2050 and 2100. Probability of presence is interpreted as a proxy for habitat suitability; only probabilities greater than 0.5 are shown.
-
-[\textcolor{blue}{Back to Contents}](#contents)
+\textbf{Figure S2.} Results of model evaluation for the pink sea fan (\textit{Eunicella verrucosa}) and dead man's fingers (\textit{Alcyonium digitatum}).
