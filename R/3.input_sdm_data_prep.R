@@ -374,7 +374,7 @@ A_dig = expression(italic("Alcyonium digitatum"))
 
 # Variable facet order
 facet_order = c("bathymetry","slope","Rock50cm","OrbitalVelMean","TidalVelMean","Temp_FromKrige_3km_1951_2000","Oxy_FromKrige_3km_1951_2000","Arag_FromKrige_3km_1951_2000","Calc_FromKrige_3km_1951_2000")
-facet_labels = c("Bathymetry","Slope","Rock cover","Orbital velocity","Tidal velocity","Temperature","Oxygen concentration","Aragonite saturation state","Calcite saturation state")
+facet_labels = c("Bathymetry","Slope","Rock cover","Wave orbital velocity","Tidal velocity","Temperature","Oxygen concentration","Aragonite saturation state","Calcite saturation state")
 
 # Density plot
 sdm_data %>% 
