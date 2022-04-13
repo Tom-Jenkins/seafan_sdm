@@ -353,7 +353,7 @@ Species = "A_digitatum"
 # bathymetry | slope | OrbitalVelMean | Rock50cm | TidalVelMean
 # Arag_FromKrige_3km_1951_2000 | Calc_FromKrige_3km_1951_2000 | 
 # Oxy_FromKrige_3km_1951_2000 | Temp_FromKrige_3km_1951_2000
-Variable = "Calc_FromKrige_3km_2081_2100"
+Variable = "Temp_FromKrige_3km_1951_2000"
 
 # Summary
 sdm_data %>% 
@@ -384,7 +384,7 @@ sdm_data %>%
   mutate(facet_var = factor(Variable, levels = facet_order, labels = facet_labels)) %>%
   # plot data
   ggplot(data = ., aes(x = Values, group = species, fill = species))+
-  geom_density(alpha = 0.5, adjust = 2)+
+  geom_density(alpha = 0.5)+
   coord_cartesian(expand = TRUE)+
   facet_wrap(~facet_var, scales = "free")+
   scale_fill_manual(values = c("deeppink","royalblue"),
