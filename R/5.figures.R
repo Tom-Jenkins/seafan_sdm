@@ -135,22 +135,19 @@ var_contrib_long = pivot_longer(var_contrib, cols = 2:3)
 var_contrib_long
 
 # Reorder variables
-var_order = c("slope","Rock50cm","OrbitalVelMean","TidalVelMean","Temp_FromKrige_3km_1951_2000","Oxy_FromKrige_3km_1951_2000","Calc_FromKrige_3km_1951_2000")
-var_names = c("Slope","Rock cover","Orbital velocity","Tidal velocity","Temperature","Oxygen concentration","Calcite saturation state")
+var_order = c("slope","Rock50cm","OrbitalVelMean","TidalVelMean","Temp_FromKrige_3km_1951_2000","Oxy_FromKrige_3km_1951_2000")
+var_names = c("Slope","Rock cover","Orbital velocity","Tidal velocity","Temperature","Oxygen concentration")
 var_contrib_long$variable = factor(var_contrib_long$variable, levels = rev(var_order), labels = rev(var_names))
 
 # Plot variable contribution
-plt_varcontrib = function(df, Species = ""){
+plt_varcontrib = function(df, Species = "", xmax = 50){
   df %>% 
     dplyr::filter(species == {Species}) %>% 
     ggplot(data = .)+
-      # geom_bar(aes(x = variable, y = value, fill = name),
-      #          position = "dodge", stat = "identity",
-      #          width = 0.5)+
       geom_col(aes(x = variable, y = value, fill = name),
                 position = "dodge", width = 0.7)+
       coord_flip(expand = FALSE)+
-      scale_y_continuous(limits = c(0,50))+
+      scale_y_continuous(limits = c(0, xmax))+
       scale_fill_manual(values = c("#d9d9d9","#525252"),
                         labels = c("Percent contribution","Permutation importance"))+
       ylab("(%)")+
@@ -164,11 +161,11 @@ plt_varcontrib = function(df, Species = ""){
 }
 
 # Eunicella variable contribution
-plt_varA = plt_varcontrib(var_contrib_long, Species = "Eunicella")+
+plt_varA = plt_varcontrib(var_contrib_long, Species = "Eunicella", xmax = max(var_contrib_long$value))+
   ggtitle(expression(italic("Eunicella verrucosa")))
 
 # Alcyonium variable contribution
-plt_varB = plt_varcontrib(var_contrib_long, Species = "Alcyonium")+
+plt_varB = plt_varcontrib(var_contrib_long, Species = "Alcyonium", xmax = max(var_contrib_long$value))+
   ggtitle(expression(italic("Alcyonium digitatum")))
 
 # Patchwork
@@ -191,7 +188,7 @@ dmf_raster = raster::stack("../data/deadmansfingers_ras.grd")
 
 # Bounding box
 bb = raster::extent(2577837, 4263921, 2500000, 4550179)
-bb2 = raster::extent(2777837, 4003921, 2600000, 4232179)
+bb2 = raster::extent(2777837, 4003921, 2600000, 4000000)
 
 # Plot heatmaps using tmap
 plt_habsuit = function(ras, bbox = NULL, labs = "", image_path = NULL){

@@ -353,7 +353,7 @@ Species = "A_digitatum"
 # bathymetry | slope | OrbitalVelMean | Rock50cm | TidalVelMean
 # Arag_FromKrige_3km_1951_2000 | Calc_FromKrige_3km_1951_2000 | 
 # Oxy_FromKrige_3km_1951_2000 | Temp_FromKrige_3km_1951_2000
-Variable = "Temp_FromKrige_3km_1951_2000"
+Variable = "Calc_FromKrige_3km_2081_2100"
 
 # Summary
 sdm_data %>% 

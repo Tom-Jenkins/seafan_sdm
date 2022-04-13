@@ -33,6 +33,13 @@ strathclyde = raster::stack("../data/raster_predictors/strathclyde.tif")
 env_ras = raster::stack("../data/raster_predictors/env_rasters.tif")
 # biooracle = raster::stack("../data/raster_predictors/biooracle.tif")
 
+# Binary calcite saturation state (<1 = under-saturated, >1 = over-saturated)
+# calcite = raster::stack(env_ras$Calc_FromKrige_3km_1951_2000, env_ras$Calc_FromKrige_3km_2081_2100)
+# calcite
+# calcite_bin = calcite > 1
+# calcite_bin %>% values %>% summary
+# plot(calcite_bin)
+
 # Subset present-day variables from raster stack
 ras_predictors = raster::stack(bathymetry, slope, strathclyde, env_ras) %>% 
   raster::subset(., str_subset(names(.), "2081_2100", negate = TRUE))
@@ -47,6 +54,7 @@ ras_cor = ras_vif@corMatrix
 variables_to_remove = c("bathymetry",
                         "ph_FromKrige_3km_1951_2000",
                         "Arag_FromKrige_3km_1951_2000",
+                        "Calc_FromKrige_3km_1951_2000",
                         "Epc_FromKrige_3km_1951_2000")
 ras_predictors = dropLayer(ras_predictors, variables_to_remove)
 names(ras_predictors)
@@ -55,7 +63,7 @@ names(ras_predictors)
 vifcor(ras_predictors, maxobservations = ncell(ras_predictors), th = 0.70)
 
 # Export raster predictors as .RData object
-raster::writeRaster(ras_predictors, filename = "../data/ras_predictors.grd")
+raster::writeRaster(ras_predictors, filename = "../data/ras_predictors.grd", overwrite = TRUE)
 
 
 # --------------- #
@@ -228,7 +236,7 @@ tmap_arrange(psf_tm1, psf_tm2)
 # Export raster predictions
 psf_raster = raster::stack(psf_pred, psf_pred_future) %>% 
   set_names(c("psf_pred","psf_pred_future"))
-raster::writeRaster(psf_raster, filename = "../data/pinkseafan_ras.grd")
+raster::writeRaster(psf_raster, filename = "../data/pinkseafan_ras.grd", overwrite = T)
 
 
 
@@ -400,7 +408,7 @@ tmap_arrange(dmf_tm1, dmf_tm2)
 # Export raster predictions
 dmf_raster = raster::stack(dmf_pred, dmf_pred_future) %>% 
   set_names(c("dmf_pred","dmf_pred_future"))
-raster::writeRaster(dmf_raster, filename = "../data/deadmansfingers_ras.grd")
+raster::writeRaster(dmf_raster, filename = "../data/deadmansfingers_ras.grd", overwrite = T)
 
 
 
@@ -412,12 +420,17 @@ raster::writeRaster(dmf_raster, filename = "../data/deadmansfingers_ras.grd")
 
 # Table of evaluation stats for all models
 library(gt)
+library(webshot)
 plot_gt = function(maxent_res_df, title = ""){
+  
   eval_stats = maxent_res_df %>%
     dplyr::select(fc, rm, auc.val.avg, auc.val.sd, cbi.val.avg, cbi.val.sd, delta.AICc) %>% 
     mutate(fc = factor(fc, levels = c("L","LQ","H"))) %>% 
     arrange(fc, rm) %>% 
     mutate_if(is.numeric, round, 2)
+  
+  bold_row_num = which(eval_stats$delta.AICc == 0)
+  
   eval_stats %>%
     gt() %>% 
     tab_header(title = title) %>% 
@@ -426,11 +439,9 @@ plot_gt = function(maxent_res_df, title = ""){
       locations = cells_title(groups = "title")) %>% 
     tab_style(
       style = list(cell_text(weight = "bold")),
-      locations = cells_body(columns = everything(), rows = 11))
+      locations = cells_body(columns = everything(), rows = bold_row_num))
 }
 (psf_gt = plot_gt(psf_maxent@results, title = "Eunicella verrucosa"))
 (dmf_gt = plot_gt(dmf_maxent@results, title = "Alcyonium digitatum"))
-gtsave(psf_gt, filename = "../figures/gt_psf.tex")
-gtsave(dmf_gt, filename = "../figures/gt_dmf.tex")
-
-
+gtsave(psf_gt, filename = "../figures/gt_psf.png")
+gtsave(dmf_gt, filename = "../figures/gt_dmf.png")

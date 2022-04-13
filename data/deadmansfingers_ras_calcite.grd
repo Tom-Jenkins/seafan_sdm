@@ -1,0 +1,25 @@
+[general]
+creator=R package 'raster'
+created=2022-04-07 15:43:37
+[georeference]
+nrows=797
+ncols=681
+xmin=2277837.4351314
+ymin=2325790.28313474
+xmax=4263921.31740769
+ymax=4650179.20262696
+projection=+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs
+[data]
+datatype=FLT4S
+byteorder=little
+nbands=2
+bandorder=BIL
+minvalue=0.00130380783230066:0.00776763260364532
+maxvalue=1:0.99999988079071
+nodatavalue=-3.4e+38
+[legend]
+legendtype=
+values=
+color=
+[description]
+layername=dmf_pred:dmf_pred_future
