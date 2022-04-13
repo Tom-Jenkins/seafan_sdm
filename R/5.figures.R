@@ -238,7 +238,7 @@ col_bin = colorBin(palette = ras_cols, bins = ras_bin, domain = ras_bin, na.colo
 
 # Title
 map_title = tags$div(
-  HTML("<strong>Jenkins & Stevens 2022: Figure 4</strong>")
+  HTML("<strong>Jenkins and Stevens 2022: Figure 4</strong>")
 ) 
 
 # Leaflet map
