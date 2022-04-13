@@ -6,4 +6,4 @@ Species:
 - Pink sea fan (_Eunicella verrucosa_)
 - Dead man's fingers (_Alcyonium digitatum_)
 
-Click [here](https://tom-jenkins.github.io/seafan_sdm/figures/Figure4_interactive) for an interactive version of Figure 4.
+Click [here](https://tom-jenkins.github.io/seafan_sdm/figures/Figure4_interactive) for an interactive version of Figure 4
