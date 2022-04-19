@@ -1,7 +1,7 @@
 ---
 title: "Predicting habitat suitability and range shifts under projected climate change for two octocorals in the north-east Atlantic"
 subtitle: "Supplementary Figures"
-author: "Jenkins and Stevens (in review)"
+author: "Jenkins and Stevens 2022"
 output:
   pdf_document:
     highlight: tango
