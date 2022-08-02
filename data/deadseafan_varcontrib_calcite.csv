@@ -1,8 +1,0 @@
-variable,percent.contribution,permutation.importance
-Rock50cm,1.994,0.4697
-TidalVelMean,4.777,0.6663
-Temp_FromKrige_3km_1951_2000,6.98,13.5354
-Oxy_FromKrige_3km_1951_2000,7.7537,15.9372
-OrbitalVelMean,8.7258,6.4123
-Calc_FromKrige_3km_1951_2000,29.1484,43.7943
-slope,40.621,19.1847
